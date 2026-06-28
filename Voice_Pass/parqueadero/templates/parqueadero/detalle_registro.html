@@ -1,0 +1,70 @@
+{% extends 'parqueadero/base.html' %}
+
+{% block title %}Detalle Registro - Parqueadero{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header {% if registro.estado == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-text me-2"></i>Detalle del Registro
+                </h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Placa</dt>
+                    <dd class="col-sm-7"><span class="placa-badge fs-5">{{ registro.vehiculo.placa }}</span></dd>
+
+                    <dt class="col-sm-5">Tipo de vehículo</dt>
+                    <dd class="col-sm-7">{{ registro.vehiculo.get_tipo_display }}</dd>
+
+                    <dt class="col-sm-5">Propietario</dt>
+                    <dd class="col-sm-7">{{ registro.vehiculo.propietario|default:"-" }}</dd>
+
+                    <dt class="col-sm-5">Puesto</dt>
+                    <dd class="col-sm-7">{{ registro.puesto|default:"-" }}</dd>
+
+                    <dt class="col-sm-5">Hora de entrada</dt>
+                    <dd class="col-sm-7">{{ registro.hora_entrada|date:"d/m/Y H:i:s" }}</dd>
+
+                    <dt class="col-sm-5">Hora de salida</dt>
+                    <dd class="col-sm-7">{{ registro.hora_salida|date:"d/m/Y H:i:s"|default:"—" }}</dd>
+
+                    <dt class="col-sm-5">Duración</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-info text-dark fs-6">{{ registro.duracion }}</span>
+                    </dd>
+
+                    <dt class="col-sm-5">Estado</dt>
+                    <dd class="col-sm-7">
+                        {% if registro.estado == 'ACTIVO' %}
+                            <span class="badge bg-success">En parqueadero</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Salió</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-5">Registrado por</dt>
+                    <dd class="col-sm-7">{{ registro.registrado_por|default:"-" }}</dd>
+
+                    {% if registro.observaciones %}
+                    <dt class="col-sm-5">Observaciones</dt>
+                    <dd class="col-sm-7">{{ registro.observaciones }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+            <div class="card-footer d-flex gap-2 justify-content-end">
+                <a href="{% url 'parqueadero:historial' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al Historial
+                </a>
+                {% if registro.estado == 'ACTIVO' %}
+                <a href="{% url 'parqueadero:registrar_salida' %}" class="btn btn-danger">
+                    <i class="bi bi-box-arrow-right me-1"></i>Registrar Salida
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

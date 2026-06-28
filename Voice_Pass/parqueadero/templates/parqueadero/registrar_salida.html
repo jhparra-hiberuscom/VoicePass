@@ -1,0 +1,73 @@
+{% extends 'parqueadero/base.html' %}
+
+{% block title %}Registrar Salida - Parqueadero{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-box-arrow-right me-2"></i>Registrar Salida de Vehículo</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="buscar">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Placa del Vehículo</label>
+                        {{ form.placa }}
+                        {% if form.placa.errors %}
+                            <div class="invalid-feedback d-block">{{ form.placa.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="bi bi-search me-1"></i>Buscar Vehículo
+                    </button>
+                </form>
+
+                {% if registro_encontrado %}
+                <hr>
+                <div class="card border-warning mb-3">
+                    <div class="card-header bg-warning text-dark fw-bold">
+                        <i class="bi bi-car-front me-2"></i>Vehículo encontrado
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Placa</dt>
+                            <dd class="col-sm-7">
+                                <span class="placa-badge">{{ registro_encontrado.vehiculo.placa }}</span>
+                            </dd>
+                            <dt class="col-sm-5">Tipo</dt>
+                            <dd class="col-sm-7">{{ registro_encontrado.vehiculo.get_tipo_display }}</dd>
+                            <dt class="col-sm-5">Propietario</dt>
+                            <dd class="col-sm-7">{{ registro_encontrado.vehiculo.propietario|default:"-" }}</dd>
+                            <dt class="col-sm-5">Hora de entrada</dt>
+                            <dd class="col-sm-7">{{ registro_encontrado.hora_entrada|date:"d/m/Y H:i" }}</dd>
+                            <dt class="col-sm-5">Tiempo en parqueadero</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-info text-dark fs-6">{{ registro_encontrado.duracion }}</span>
+                            </dd>
+                            <dt class="col-sm-5">Puesto</dt>
+                            <dd class="col-sm-7">{{ registro_encontrado.puesto|default:"-" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="confirmar_salida">
+                    <input type="hidden" name="placa" value="{{ registro_encontrado.vehiculo.placa }}">
+                    <input type="hidden" name="registro_id" value="{{ registro_encontrado.pk }}">
+                    <button type="submit" class="btn btn-danger btn-lg w-100">
+                        <i class="bi bi-check-circle me-1"></i>Confirmar Salida
+                    </button>
+                </form>
+                {% endif %}
+
+                <a href="{% url 'parqueadero:inicio' %}" class="btn btn-outline-secondary w-100 mt-3">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

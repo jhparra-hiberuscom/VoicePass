@@ -1,0 +1,97 @@
+{% extends 'parqueadero/base.html' %}
+
+{% block title %}Inicio - Parqueadero{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card activos shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-car-front-fill text-success" style="font-size:2.5rem;"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Vehículos en parqueadero</div>
+                    <div class="fs-1 fw-bold text-success">{{ total_activos }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card hoy shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-calendar-check-fill text-primary" style="font-size:2.5rem;"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Registros de hoy</div>
+                    <div class="fs-1 fw-bold text-primary">{{ total_hoy }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <a href="{% url 'parqueadero:registrar_entrada' %}" class="btn btn-success btn-lg w-100 py-3">
+            <i class="bi bi-box-arrow-in-right fs-3 d-block mb-1"></i>
+            Registrar Entrada
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="{% url 'parqueadero:registrar_salida' %}" class="btn btn-danger btn-lg w-100 py-3">
+            <i class="bi bi-box-arrow-right fs-3 d-block mb-1"></i>
+            Registrar Salida
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-p-circle me-2"></i>Vehículos actualmente en el parqueadero</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if vehiculos_en_parqueadero %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Placa</th>
+                        <th>Tipo</th>
+                        <th>Propietario</th>
+                        <th>Puesto</th>
+                        <th>Hora Entrada</th>
+                        <th>Tiempo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in vehiculos_en_parqueadero %}
+                    <tr>
+                        <td><span class="placa-badge">{{ reg.vehiculo.placa }}</span></td>
+                        <td>{{ reg.vehiculo.get_tipo_display }}</td>
+                        <td>{{ reg.vehiculo.propietario|default:"-" }}</td>
+                        <td>{{ reg.puesto|default:"-" }}</td>
+                        <td>{{ reg.hora_entrada|date:"d/m/Y H:i" }}</td>
+                        <td><span class="badge bg-info text-dark">{{ reg.duracion }}</span></td>
+                        <td>
+                            <a href="{% url 'parqueadero:detalle_registro' reg.pk %}"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-p-circle" style="font-size:3rem;"></i>
+            <p class="mt-2">El parqueadero está vacío.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
