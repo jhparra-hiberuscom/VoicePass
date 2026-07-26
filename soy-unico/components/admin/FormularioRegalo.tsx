@@ -65,8 +65,17 @@ export default function FormularioRegalo({ initialData, regaloId, titulo }: Prop
     fd.append('file', file);
 
     const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+
+    if (!res.ok) {
+      const errData = await res.json() as { error?: string };
+      console.error('Error al subir imagen:', errData.error ?? 'Error desconocido');
+      setUploadingFoto(false);
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
+
     const data = await res.json() as { url: string };
-    if (res.ok && data.url) {
+    if (data.url) {
       setFotos((prev) => [...prev, { url: data.url, orden: prev.length, subida: true }]);
     }
     setUploadingFoto(false);

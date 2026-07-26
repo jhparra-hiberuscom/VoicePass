@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { EstadoPedido } from '@prisma/client';
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -48,7 +49,7 @@ export async function PATCH(req: NextRequest) {
 
   const { id, estado, numeroSeguimiento } = await req.json() as {
     id: string;
-    estado: string;
+    estado: EstadoPedido;
     numeroSeguimiento?: string;
   };
 
@@ -56,9 +57,14 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'id y estado son requeridos' }, { status: 400 });
   }
 
+  const estadosValidos = Object.values(EstadoPedido);
+  if (!estadosValidos.includes(estado)) {
+    return NextResponse.json({ error: `Estado inválido. Debe ser uno de: ${estadosValidos.join(', ')}` }, { status: 400 });
+  }
+
   const pedido = await prisma.pedido.update({
     where: { id },
-    data:  { estado: estado as never, numeroSeguimiento },
+    data:  { estado, numeroSeguimiento },
   });
 
   return NextResponse.json(pedido);

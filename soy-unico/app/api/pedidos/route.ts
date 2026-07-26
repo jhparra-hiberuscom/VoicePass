@@ -57,30 +57,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Se requiere una dirección de envío' }, { status: 400 });
   }
 
-  // Crear pedido y descontar stock en transacción
-  const pedido = await prisma.$transaction(async (tx) => {
-    await tx.regalo.update({
-      where: { id: regaloId },
-      data:  { stock: { decrement: cantidad } },
-    });
+  // Crear pedido y descontar stock en transacción (con validación atómica de stock)
+  let pedido;
+  try {
+    pedido = await prisma.$transaction(async (tx) => {
+      const regaloActual = await tx.regalo.findUnique({
+        where:  { id: regaloId },
+        select: { stock: true },
+      });
+      if (!regaloActual || regaloActual.stock < cantidad) {
+        throw new Error('STOCK_INSUFICIENTE');
+      }
 
-    return tx.pedido.create({
-      data: {
-        userId:          session.user.id,
-        regaloId,
-        direccionId:     dirId!,
-        cantidad,
-        precioUnitario:  regalo.precio,
-        fechaProgramada: new Date(fechaProgramada),
-        franja,
-        notas,
-      },
-      include: {
-        regalo:    { select: { nombre: true } },
-        direccion: true,
-      },
+      await tx.regalo.update({
+        where: { id: regaloId },
+        data:  { stock: { decrement: cantidad } },
+      });
+
+      return tx.pedido.create({
+        data: {
+          userId:          session.user.id,
+          regaloId,
+          direccionId:     dirId!,
+          cantidad,
+          precioUnitario:  regalo.precio,
+          fechaProgramada: new Date(fechaProgramada),
+          franja,
+          notas,
+        },
+        include: {
+          regalo:    { select: { nombre: true } },
+          direccion: true,
+        },
+      });
     });
-  });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'STOCK_INSUFICIENTE') {
+      return NextResponse.json({ error: 'Stock insuficiente para completar el pedido' }, { status: 400 });
+    }
+    throw err;
+  }
 
   return NextResponse.json(pedido, { status: 201 });
 }

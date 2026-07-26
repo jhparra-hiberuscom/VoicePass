@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'crypto'; // We'll use Math.random instead
 
 interface Opcion {
   id: string;

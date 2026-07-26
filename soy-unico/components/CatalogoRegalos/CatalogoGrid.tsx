@@ -55,7 +55,7 @@ export default function CatalogoGrid() {
 
     const res  = await fetch(`/api/regalos?${params}`);
     const data = await res.json() as ApiResponse;
-    setRegalos(p === 1 ? data.regalos : (prev) => [...prev, ...data.regalos]);
+    setRegalos((prev) => p === 1 ? data.regalos : [...prev, ...data.regalos]);
     setTotal(data.total);
     setPage(p);
     setCargando(false);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 type EstadoPedido = 'PENDIENTE' | 'CONFIRMADO' | 'EN_PREPARACION' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO';
 
@@ -33,7 +32,6 @@ const estadoColor: Record<EstadoPedido, string> = {
 };
 
 export default function AdminPedidosClient({ pedidos: initialPedidos }: { pedidos: Pedido[] }) {
-  const router = useRouter();
   const [pedidos, setPedidos]   = useState<Pedido[]>(initialPedidos);
   const [filtro, setFiltro]     = useState<EstadoPedido | 'TODOS'>('TODOS');
   const [editando, setEditando] = useState<string | null>(null);
@@ -55,7 +53,6 @@ export default function AdminPedidosClient({ pedidos: initialPedidos }: { pedido
         prev.map((p) => p.id === id ? { ...p, estado: nuevoEstado, numeroSeguimiento: seguimiento } : p),
       );
       setEditando(null);
-      router.refresh();
     }
     setSaving(false);
   }

@@ -14,7 +14,7 @@ interface Regalo {
   fotos:  { url: string; orden: number }[];
 }
 
-type Paso = 'regalo' | 'direccion' | 'fecha' | 'confirmacion';
+type Paso = 'direccion' | 'fecha' | 'confirmacion';
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
@@ -23,7 +23,7 @@ export default function CheckoutPage() {
 
   const regaloId = searchParams.get('regaloId');
 
-  const [paso, setPaso]         = useState<Paso>('regalo');
+  const [paso, setPaso]         = useState<Paso>('direccion');
   const [regalo, setRegalo]     = useState<Regalo | null>(null);
   const [direccion, setDireccion] = useState<Record<string, string> | null>(null);
   const [fecha, setFecha]       = useState('');
@@ -110,7 +110,7 @@ export default function CheckoutPage() {
       )}
 
       {/* Paso: dirección */}
-      {paso === 'regalo' && (
+      {paso === 'direccion' && (
         <div>
           <h2 className="mb-4 text-lg font-semibold text-gray-800">Dirección de envío</h2>
           <FormularioDireccion
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
           {error && <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
 
           <div className="flex gap-3">
-            <button onClick={() => setPaso('regalo')} className="btn-ghost flex-1">← Volver</button>
+            <button onClick={() => setPaso('direccion')} className="btn-ghost flex-1">← Volver</button>
             <button
               onClick={confirmarPedido}
               disabled={!fecha || loading}
