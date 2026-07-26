@@ -1,0 +1,189 @@
+// Prisma schema — Soy Único.co
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Autenticación (NextAuth) ──────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Usuario ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  nombre        String
+  email         String    @unique
+  emailVerified DateTime?
+  telefono      String?
+  passwordHash  String?
+  image         String?
+  esAdmin       Boolean   @default(false)
+  creadoEn      DateTime  @default(now())
+
+  accounts     Account[]
+  sessions     Session[]
+  direcciones  Direccion[]
+  pedidos      Pedido[]
+  respuestas   RespuestaEncuesta[]
+}
+
+// ─── Dirección de Envío ─────────────────────────────────────────────────────
+
+model Direccion {
+  id           String  @id @default(cuid())
+  userId       String
+  calle        String
+  ciudad       String
+  departamento String
+  codPostal    String?
+  referencia   String?
+  esPrincipal  Boolean @default(false)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pedidos Pedido[]
+}
+
+// ─── Catálogo de Regalos ────────────────────────────────────────────────────
+
+model Regalo {
+  id       String  @id @default(cuid())
+  nombre   String
+  resumen  String  @db.Text
+  precio   Decimal @db.Decimal(12, 2)
+  alto     Decimal @db.Decimal(8, 2) // cm
+  ancho    Decimal @db.Decimal(8, 2) // cm
+  largo    Decimal @db.Decimal(8, 2) // cm
+  peso     Decimal @db.Decimal(8, 3) // kg
+  stock    Int     @default(0)
+  activo   Boolean @default(true)
+  creadoEn DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  fotos    FotoRegalo[]
+  keywords KeywordRegalo[]
+  pedidos  Pedido[]
+}
+
+model FotoRegalo {
+  id      String @id @default(cuid())
+  regaloId String
+  url     String
+  orden   Int    @default(0) // 0, 1, 2 — máx. 3 fotos
+
+  regalo Regalo @relation(fields: [regaloId], references: [id], onDelete: Cascade)
+}
+
+model KeywordRegalo {
+  id       String @id @default(cuid())
+  regaloId String
+  keyword  String // ej: "tecnología", "joven", "cumpleaños"
+
+  regalo Regalo @relation(fields: [regaloId], references: [id], onDelete: Cascade)
+
+  @@index([keyword])
+}
+
+// ─── Encuesta de Perfilamiento ──────────────────────────────────────────────
+
+model PreguntaEncuesta {
+  id      String  @id @default(cuid())
+  texto   String
+  orden   Int
+  activa  Boolean @default(true)
+
+  opciones  OpcionPregunta[]
+  respuestas RespuestaEncuesta[]
+}
+
+model OpcionPregunta {
+  id         String @id @default(cuid())
+  preguntaId String
+  texto      String
+  keywords   String[] // array de palabras clave asociadas
+
+  pregunta   PreguntaEncuesta @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+  respuestas RespuestaEncuesta[]
+}
+
+model RespuestaEncuesta {
+  id         String   @id @default(cuid())
+  userId     String?  // null si el usuario no está autenticado
+  sessionId  String   // sesión anónima o autenticada
+  preguntaId String
+  opcionId   String
+  creadaEn  DateTime @default(now())
+
+  user     User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pregunta PreguntaEncuesta @relation(fields: [preguntaId], references: [id])
+  opcion   OpcionPregunta   @relation(fields: [opcionId], references: [id])
+}
+
+// ─── Pedidos ────────────────────────────────────────────────────────────────
+
+model Pedido {
+  id               String      @id @default(cuid())
+  userId           String
+  regaloId         String
+  direccionId      String
+  cantidad         Int         @default(1)
+  precioUnitario   Decimal     @db.Decimal(12, 2)
+  fechaProgramada  DateTime
+  franja           String      // "mañana" | "tarde" | "noche"
+  estado           EstadoPedido @default(PENDIENTE)
+  numeroSeguimiento String?
+  notas            String?     @db.Text
+  creadoEn         DateTime    @default(now())
+  actualizadoEn    DateTime    @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id])
+  regalo    Regalo    @relation(fields: [regaloId], references: [id])
+  direccion Direccion @relation(fields: [direccionId], references: [id])
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  CONFIRMADO
+  EN_PREPARACION
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+}
